@@ -15,7 +15,7 @@ public class CodebookLibrary
         this.codebook_data = null;
         this.codebook_offsets = null;
         this.codebook_count = 0;
-        BinaryReader @is = new BinaryReader(File.OpenRead(filename));
+        using BinaryReader @is = new BinaryReader(File.OpenRead(filename));
 
         if (@is == null)
         {

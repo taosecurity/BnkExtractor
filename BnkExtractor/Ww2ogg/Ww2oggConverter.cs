@@ -1,4 +1,5 @@
 ﻿using BnkExtractor.Ww2ogg.Exceptions;
+using System;
 using System.IO;
 
 namespace BnkExtractor.Ww2ogg;
@@ -40,22 +41,25 @@ public static class Ww2oggConverter
         try
         {
             Logger.LogVerbose($"Input: {opt.InFilename}");
-            Wwise_RIFF_Vorbis ww = new Wwise_RIFF_Vorbis(opt.InFilename, opt.CodebooksFilename, opt.InlineCodebooks, opt.FullSetup, opt.ForcePacketFormat);
+            using Wwise_RIFF_Vorbis ww = new Wwise_RIFF_Vorbis(opt.InFilename, opt.CodebooksFilename, opt.InlineCodebooks, opt.FullSetup, opt.ForcePacketFormat);
 
             ww.PrintInfo();
             Logger.LogVerbose($"Output: {opt.OutFilename}");
 
-            BinaryWriter of = new BinaryWriter(File.Create(opt.OutFilename));
-            if (of == null)
+            try
             {
-                throw new FileOpenException(opt.OutFilename);
+                using BinaryWriter of = new BinaryWriter(File.Create(opt.OutFilename));
+                ww.GenerateOgg(of);
+            }
+            catch
+            {
+                // don't leave a half-written .ogg behind for the caller to mistake for a good one
+                TryDelete(opt.OutFilename);
+                throw;
             }
 
-            ww.GenerateOgg(of);
             Logger.LogVerbose("Done!");
             Logger.LogVerbose("");
-
-            of.Close();
         }
         catch (FileOpenException fe)
         {
@@ -64,6 +68,18 @@ public static class Ww2oggConverter
         catch (ParseException pe)
         {
             Logger.LogError(pe.ToString());
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Logger.LogError($"Could not delete partial output {path}: {e.Message}");
         }
     }
 }

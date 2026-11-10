@@ -5,7 +5,7 @@ using System.IO;
 
 namespace BnkExtractor.Ww2ogg;
 
-public class Wwise_RIFF_Vorbis
+public class Wwise_RIFF_Vorbis : IDisposable
 {
     private string _file_name = "";
     private string _codebooks_name = "";
@@ -75,6 +75,26 @@ public class Wwise_RIFF_Vorbis
             throw new FileOpenException(name);
         }
 
+        // Close the input file if the header can't be parsed; the caller never gets an object to dispose
+        try
+        {
+            ReadHeader(force_packet_format);
+        }
+        catch
+        {
+            _infile.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>Close the input file. Call this (or use a using statement) once the conversion is done.</summary>
+    public void Dispose()
+    {
+        _infile?.Dispose();
+    }
+
+    private void ReadHeader(ForcePacketFormat force_packet_format)
+    {
         _infile.seekg(0, StreamPosition.End);
         _file_size = _infile.tellg();
 

@@ -804,7 +804,7 @@ public class Wwise_RIFF_Vorbis : IDisposable
                     {
                         cbl.rebuild((int)codebook_id, os);
                     }
-                    catch (InvalidIdException e)
+                    catch (InvalidIdException)
                     {
                         //         B         C         V
                         //    4    2    4    3    5    6
@@ -832,7 +832,7 @@ public class Wwise_RIFF_Vorbis : IDisposable
                         }
 
                         // just an invalid codebook
-                        throw e;
+                        throw;
                     }
                 }
             }

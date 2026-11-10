@@ -733,7 +733,9 @@ public class Wwise_RIFF_Vorbis : IDisposable
                     Bit_uint.WriteBits(os, c);
                 }
 
-                Bit_uint8 loop_end_comment_length = new((uint)loop_end_str.str().Length);
+                // 32 bits, like every Vorbis comment length (an 8-bit length here made a malformed
+                // header that decoders such as NVorbis reject: "Could not read full string")
+                Bit_uint32 loop_end_comment_length = new((uint)loop_end_str.str().Length);
                 Bit_uint.WriteBits(os, loop_end_comment_length);
                 for (uint i = 0; i < loop_end_comment_length; i++)
                 {
